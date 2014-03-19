@@ -67,13 +67,13 @@ void msgpack_zone_destroy(msgpack_zone* zone);
 msgpack_zone* msgpack_zone_new(size_t chunk_size);
 void msgpack_zone_free(msgpack_zone* zone);
 
-static inline void* msgpack_zone_malloc(msgpack_zone* zone, size_t size);
+extern inline void* msgpack_zone_malloc(msgpack_zone* zone, size_t size);
 static inline void* msgpack_zone_malloc_no_align(msgpack_zone* zone, size_t size);
 
-static inline bool msgpack_zone_push_finalizer(msgpack_zone* zone,
+extern inline bool msgpack_zone_push_finalizer(msgpack_zone* zone,
 		void (*func)(void* data), void* data);
 
-static inline void msgpack_zone_swap(msgpack_zone* a, msgpack_zone* b);
+extern inline void msgpack_zone_swap(msgpack_zone* a, msgpack_zone* b);
 
 bool msgpack_zone_is_empty(msgpack_zone* zone);
 

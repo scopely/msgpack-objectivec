@@ -60,19 +60,19 @@
 // Pack a single object into the given packer
 + (void)packObject:(id)obj into:(msgpack_packer*)pk {
 	if ([obj isKindOfClass:[NSArray class]]) {
-		msgpack_pack_array(pk, ((NSArray*)obj).count);
+		msgpack_pack_array(pk, (unsigned int)((NSArray*)obj).count);
 		for (id arrayElement in obj) {
 			[self packObject:arrayElement into:pk];
 		}
 	} else if ([obj isKindOfClass:[NSDictionary class]]) {
-		msgpack_pack_map(pk, ((NSDictionary*)obj).count);
+		msgpack_pack_map(pk, (unsigned int)((NSDictionary*)obj).count);
 		for(id key in obj) {
 			[self packObject:key into:pk];
 			[self packObject:[obj objectForKey:key] into:pk];
 		}
 	} else if ([obj isKindOfClass:[NSString class]]) {
 		const char *str = ((NSString*)obj).UTF8String;
-		int len = strlen(str);
+		size_t len = strlen(str);
 		msgpack_pack_raw(pk, len);
 		msgpack_pack_raw_body(pk, str, len);
 	} else if ([obj isKindOfClass:[NSNumber class]]) {
