@@ -7,7 +7,7 @@
 //
 
 #import <Foundation/Foundation.h>
-#import "MessagePackParser.h"
+#import <WithBuddiesBase/MessagePackParser.h>
 
 @interface MessagePackParser (Streaming)
 

@@ -6,7 +6,7 @@
 //  Copyright 2011 Digital Five. All rights reserved.
 //
 
-#import "MessagePackParser.h"
+#import "MessagePackParser_Internal.h"
 
 @implementation MessagePackParser
 

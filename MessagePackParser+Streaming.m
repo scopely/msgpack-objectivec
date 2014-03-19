@@ -6,6 +6,7 @@
 //  Copyright (c) 2013 kenmaz.net. All rights reserved.
 //
 
+#import "MessagePackParser_Internal.h"
 #import "MessagePackParser+Streaming.h"
 
 static const int kUnpackerBufferSize = 1024;
