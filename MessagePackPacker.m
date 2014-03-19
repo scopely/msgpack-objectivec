@@ -53,7 +53,7 @@
 		}
 			break;
 		default:
-			NSLog(@"Could not messagepack number, cannot recognise type: %@", num);
+			CoreLog(WBLogLevelError, @"Could not messagepack number, cannot recognise type: %@", num);
 	}
 }
 
@@ -80,7 +80,7 @@
 	} else if (obj==[NSNull null]) {
 		msgpack_pack_nil(pk);
 	} else {
-		NSLog(@"Could not messagepack object: %@", obj);
+		CoreLog(WBLogLevelError, @"Could not messagepack object: %@", obj);
 	}
 }
 
