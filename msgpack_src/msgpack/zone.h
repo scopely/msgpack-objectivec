@@ -67,13 +67,13 @@ void msgpack_zone_destroy(msgpack_zone* zone);
 msgpack_zone* msgpack_zone_new(size_t chunk_size);
 void msgpack_zone_free(msgpack_zone* zone);
 
-extern inline void* msgpack_zone_malloc(msgpack_zone* zone, size_t size);
+extern void* msgpack_zone_malloc(msgpack_zone* zone, size_t size);
 static inline void* msgpack_zone_malloc_no_align(msgpack_zone* zone, size_t size);
 
-extern inline bool msgpack_zone_push_finalizer(msgpack_zone* zone,
+extern bool msgpack_zone_push_finalizer(msgpack_zone* zone,
 		void (*func)(void* data), void* data);
 
-extern inline void msgpack_zone_swap(msgpack_zone* a, msgpack_zone* b);
+extern void msgpack_zone_swap(msgpack_zone* a, msgpack_zone* b);
 
 bool msgpack_zone_is_empty(msgpack_zone* zone);
 
@@ -85,59 +85,6 @@ void msgpack_zone_clear(msgpack_zone* zone);
 #ifndef MSGPACK_ZONE_ALIGN
 #define MSGPACK_ZONE_ALIGN sizeof(int)
 #endif
-
-void* msgpack_zone_malloc_expand(msgpack_zone* zone, size_t size);
-
-void* msgpack_zone_malloc_no_align(msgpack_zone* zone, size_t size)
-{
-	msgpack_zone_chunk_list* cl = &zone->chunk_list;
-
-	if(zone->chunk_list.free < size) {
-		return msgpack_zone_malloc_expand(zone, size);
-	}
-
-	char* ptr = cl->ptr;
-	cl->free -= size;
-	cl->ptr  += size;
-
-	return ptr;
-}
-
-void* msgpack_zone_malloc(msgpack_zone* zone, size_t size)
-{
-	return msgpack_zone_malloc_no_align(zone,
-			((size)+((MSGPACK_ZONE_ALIGN)-1)) & ~((MSGPACK_ZONE_ALIGN)-1));
-}
-
-
-bool msgpack_zone_push_finalizer_expand(msgpack_zone* zone,
-		void (*func)(void* data), void* data);
-
-bool msgpack_zone_push_finalizer(msgpack_zone* zone,
-		void (*func)(void* data), void* data)
-{
-	msgpack_zone_finalizer_array* const fa = &zone->finalizer_array;
-	msgpack_zone_finalizer* fin = fa->tail;
-
-	if(fin == fa->end) {
-		return msgpack_zone_push_finalizer_expand(zone, func, data);
-	}
-
-	fin->func = func;
-	fin->data = data;
-
-	++fa->tail;
-
-	return true;
-}
-
-void msgpack_zone_swap(msgpack_zone* a, msgpack_zone* b)
-{
-	msgpack_zone tmp = *a;
-	*a = *b;
-	*b = tmp;
-}
-
 
 #ifdef __cplusplus
 }

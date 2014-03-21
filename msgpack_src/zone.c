@@ -219,3 +219,53 @@ void msgpack_zone_free(msgpack_zone* zone)
 	free(zone);
 }
 
+void* msgpack_zone_malloc_no_align(msgpack_zone* zone, size_t size)
+{
+	msgpack_zone_chunk_list* cl = &zone->chunk_list;
+    
+	if(zone->chunk_list.free < size) {
+		return msgpack_zone_malloc_expand(zone, size);
+	}
+    
+	char* ptr = cl->ptr;
+	cl->free -= size;
+	cl->ptr  += size;
+    
+	return ptr;
+}
+
+inline void* msgpack_zone_malloc(msgpack_zone* zone, size_t size)
+{
+	return msgpack_zone_malloc_no_align(zone,
+                                        ((size)+((MSGPACK_ZONE_ALIGN)-1)) & ~((MSGPACK_ZONE_ALIGN)-1));
+}
+
+
+bool msgpack_zone_push_finalizer_expand(msgpack_zone* zone,
+                                        void (*func)(void* data), void* data);
+
+inline bool msgpack_zone_push_finalizer(msgpack_zone* zone,
+                                 void (*func)(void* data), void* data)
+{
+	msgpack_zone_finalizer_array* const fa = &zone->finalizer_array;
+	msgpack_zone_finalizer* fin = fa->tail;
+    
+	if(fin == fa->end) {
+		return msgpack_zone_push_finalizer_expand(zone, func, data);
+	}
+    
+	fin->func = func;
+	fin->data = data;
+    
+	++fa->tail;
+    
+	return true;
+}
+
+inline void msgpack_zone_swap(msgpack_zone* a, msgpack_zone* b)
+{
+	msgpack_zone tmp = *a;
+	*a = *b;
+	*b = tmp;
+}
+

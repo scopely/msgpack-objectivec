@@ -324,24 +324,6 @@ msgpack_object msgpack_unpacker_data(msgpack_unpacker* mpac)
 	return template_data(CTX_CAST(mpac->ctx));
 }
 
-msgpack_zone* msgpack_unpacker_release_zone(msgpack_unpacker* mpac)
-{
-	if(!msgpack_unpacker_flush_zone(mpac)) {
-		return NULL;
-	}
-
-	msgpack_zone* r = msgpack_zone_new(MSGPACK_ZONE_CHUNK_SIZE);
-	if(r == NULL) {
-		return NULL;
-	}
-
-	msgpack_zone* old = mpac->z;
-	mpac->z = r;
-	CTX_CAST(mpac->ctx)->user.z = mpac->z;
-
-	return old;
-}
-
 void msgpack_unpacker_reset_zone(msgpack_unpacker* mpac)
 {
 	msgpack_zone_clear(mpac->z);
@@ -359,6 +341,24 @@ bool msgpack_unpacker_flush_zone(msgpack_unpacker* mpac)
 	}
 
 	return true;
+}
+
+msgpack_zone* msgpack_unpacker_release_zone(msgpack_unpacker* mpac)
+{
+	if(!msgpack_unpacker_flush_zone(mpac)) {
+		return NULL;
+	}
+    
+	msgpack_zone* r = msgpack_zone_new(MSGPACK_ZONE_CHUNK_SIZE);
+	if(r == NULL) {
+		return NULL;
+	}
+    
+	msgpack_zone* old = mpac->z;
+	mpac->z = r;
+	CTX_CAST(mpac->ctx)->user.z = mpac->z;
+    
+	return old;
 }
 
 void msgpack_unpacker_reset(msgpack_unpacker* mpac)
@@ -460,5 +460,62 @@ bool msgpack_unpack_next(msgpack_unpacked* result,
 	result->data = template_data(&ctx);
 
 	return true;
+}
+
+inline bool msgpack_unpacker_reserve_buffer(msgpack_unpacker* mpac, size_t size)
+{
+	if(mpac->free >= size) { return true; }
+	return msgpack_unpacker_expand_buffer(mpac, size);
+}
+
+inline char* msgpack_unpacker_buffer(msgpack_unpacker* mpac)
+{
+	return mpac->buffer + mpac->used;
+}
+
+inline size_t msgpack_unpacker_buffer_capacity(const msgpack_unpacker* mpac)
+{
+	return mpac->free;
+}
+
+inline void msgpack_unpacker_buffer_consumed(msgpack_unpacker* mpac, size_t size)
+{
+	mpac->used += size;
+	mpac->free -= size;
+}
+
+inline size_t msgpack_unpacker_message_size(const msgpack_unpacker* mpac)
+{
+	return mpac->parsed - mpac->off + mpac->used;
+}
+
+inline size_t msgpack_unpacker_parsed_size(const msgpack_unpacker* mpac)
+{
+	return mpac->parsed;
+}
+
+
+inline void msgpack_unpacked_init(msgpack_unpacked* result)
+{
+	memset(result, 0, sizeof(msgpack_unpacked));
+}
+
+inline void msgpack_unpacked_destroy(msgpack_unpacked* result)
+{
+	if(result->zone != NULL) {
+		msgpack_zone_free(result->zone);
+		result->zone = NULL;
+		memset(&result->data, 0, sizeof(msgpack_object));
+	}
+}
+
+inline msgpack_zone* msgpack_unpacked_release_zone(msgpack_unpacked* result)
+{
+	if(result->zone != NULL) {
+		msgpack_zone* z = result->zone;
+		result->zone = NULL;
+		return z;
+	}
+	return NULL;
 }
 

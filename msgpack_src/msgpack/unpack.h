@@ -101,7 +101,7 @@ void msgpack_unpacker_free(msgpack_unpacker* mpac);
  * msgpack_unpacker_buffer_capacity(const msgpack_unpacker*) and
  * msgpack_unpacker_buffer_consumed(msgpack_unpacker*).
  */
-extern inline bool   msgpack_unpacker_reserve_buffer(msgpack_unpacker* mpac, size_t size);
+extern bool   msgpack_unpacker_reserve_buffer(msgpack_unpacker* mpac, size_t size);
 
 /**
  * Gets pointer to the free space of the internal buffer.
@@ -110,7 +110,7 @@ extern inline bool   msgpack_unpacker_reserve_buffer(msgpack_unpacker* mpac, siz
  * msgpack_unpacker_buffer_capacity(const msgpack_unpacker*) and
  * msgpack_unpacker_buffer_consumed(msgpack_unpacker*).
  */
-extern inline char*  msgpack_unpacker_buffer(msgpack_unpacker* mpac);
+extern char*  msgpack_unpacker_buffer(msgpack_unpacker* mpac);
 
 /**
  * Gets size of the free space of the internal buffer.
@@ -119,7 +119,7 @@ extern inline char*  msgpack_unpacker_buffer(msgpack_unpacker* mpac);
  * msgpack_unpacker_buffer(const msgpack_unpacker*) and
  * msgpack_unpacker_buffer_consumed(msgpack_unpacker*).
  */
-extern inline size_t msgpack_unpacker_buffer_capacity(const msgpack_unpacker* mpac);
+extern size_t msgpack_unpacker_buffer_capacity(const msgpack_unpacker* mpac);
 
 /**
  * Notifies the deserializer that the internal buffer filled.
@@ -128,7 +128,7 @@ extern inline size_t msgpack_unpacker_buffer_capacity(const msgpack_unpacker* mp
  * msgpack_unpacker_buffer(msgpack_unpacker*) and
  * msgpack_unpacker_buffer_capacity(const msgpack_unpacker*).
  */
-extern inline void   msgpack_unpacker_buffer_consumed(msgpack_unpacker* mpac, size_t size);
+extern void msgpack_unpacker_buffer_consumed(msgpack_unpacker* mpac, size_t size);
 
 
 /**
@@ -144,18 +144,18 @@ bool msgpack_unpacker_next(msgpack_unpacker* mpac, msgpack_unpacked* pac);
  * Use the object with msgpack_unpacker_next(msgpack_unpacker*, msgpack_unpacked*) or
  * msgpack_unpack_next(msgpack_unpacked*, const char*, size_t, size_t*).
  */
-extern inline void msgpack_unpacked_init(msgpack_unpacked* result);
+extern void msgpack_unpacked_init(msgpack_unpacked* result);
 
 /**
  * Destroys a streaming deserializer initialized by msgpack_unpacked().
  */
-extern inline void msgpack_unpacked_destroy(msgpack_unpacked* result);
+extern void msgpack_unpacked_destroy(msgpack_unpacked* result);
 
 /**
  * Releases the memory zone from msgpack_unpacked object.
  * The released zone must be freed by msgpack_zone_free(msgpack_zone*).
  */
-extern inline msgpack_zone* msgpack_unpacked_release_zone(msgpack_unpacked* result);
+extern msgpack_zone* msgpack_unpacked_release_zone(msgpack_unpacked* result);
 
 
 int msgpack_unpacker_execute(msgpack_unpacker* mpac);
@@ -168,7 +168,7 @@ void msgpack_unpacker_reset_zone(msgpack_unpacker* mpac);
 
 void msgpack_unpacker_reset(msgpack_unpacker* mpac);
 
-extern inline size_t msgpack_unpacker_message_size(const msgpack_unpacker* mpac);
+extern size_t msgpack_unpacker_message_size(const msgpack_unpacker* mpac);
 
 
 /** @} */
@@ -188,69 +188,7 @@ msgpack_unpack(const char* data, size_t len, size_t* off,
 		msgpack_zone* result_zone, msgpack_object* result);
 
 
-extern inline size_t msgpack_unpacker_parsed_size(const msgpack_unpacker* mpac);
-
-bool msgpack_unpacker_flush_zone(msgpack_unpacker* mpac);
-
-bool msgpack_unpacker_expand_buffer(msgpack_unpacker* mpac, size_t size);
-
-bool msgpack_unpacker_reserve_buffer(msgpack_unpacker* mpac, size_t size)
-{
-	if(mpac->free >= size) { return true; }
-	return msgpack_unpacker_expand_buffer(mpac, size);
-}
-
-char* msgpack_unpacker_buffer(msgpack_unpacker* mpac)
-{
-	return mpac->buffer + mpac->used;
-}
-
-size_t msgpack_unpacker_buffer_capacity(const msgpack_unpacker* mpac)
-{
-	return mpac->free;
-}
-
-void msgpack_unpacker_buffer_consumed(msgpack_unpacker* mpac, size_t size)
-{
-	mpac->used += size;
-	mpac->free -= size;
-}
-
-size_t msgpack_unpacker_message_size(const msgpack_unpacker* mpac)
-{
-	return mpac->parsed - mpac->off + mpac->used;
-}
-
-size_t msgpack_unpacker_parsed_size(const msgpack_unpacker* mpac)
-{
-	return mpac->parsed;
-}
-
-
-void msgpack_unpacked_init(msgpack_unpacked* result)
-{
-	memset(result, 0, sizeof(msgpack_unpacked));
-}
-
-void msgpack_unpacked_destroy(msgpack_unpacked* result)
-{
-	if(result->zone != NULL) {
-		msgpack_zone_free(result->zone);
-		result->zone = NULL;
-		memset(&result->data, 0, sizeof(msgpack_object));
-	}
-}
-
-msgpack_zone* msgpack_unpacked_release_zone(msgpack_unpacked* result)
-{
-	if(result->zone != NULL) {
-		msgpack_zone* z = result->zone;
-		result->zone = NULL;
-		return z;
-	}
-	return NULL;
-}
-
+extern size_t msgpack_unpacker_parsed_size(const msgpack_unpacker* mpac);
 
 #ifdef __cplusplus
 }
