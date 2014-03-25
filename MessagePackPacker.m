@@ -7,7 +7,10 @@
 //
 
 #import "MessagePackPacker.h"
+#import "WBObject.h"
+#import "WBTimeSpan.h"
 #include "msgpack_src/msgpack.h"
+
 
 @implementation MessagePackPacker
 
@@ -53,34 +56,69 @@
 		}
 			break;
 		default:
-			CoreLog(WBLogLevelError, @"Could not messagepack number, cannot recognise type: %@", num);
+            @throw [NSException exceptionWithName:NSInvalidArgumentException
+                                           reason:[NSString stringWithFormat:@"Could not messagepack number, cannot recognise type: %@", num]
+                                         userInfo:nil];
 	}
 }
 
 // Pack a single object into the given packer
-+ (void)packObject:(id)obj into:(msgpack_packer*)pk {
-	if ([obj isKindOfClass:[NSArray class]]) {
++ (void)packObject:(id)obj into:(msgpack_packer*)pk
+{
+    if([obj isKindOfClass:[WBObject class]] || [obj isKindOfClass:[WBPersistedObject class]])
+    {
+        obj = [obj objectForPost];
+	}
+    else if([obj isKindOfClass:[NSURL class]])
+    {
+        obj = [obj absoluteString];
+    }
+    else if([obj isKindOfClass:[NSDate class]])
+    {
+        int64_t milliseconds = [obj timeIntervalSince1970] * 1000;
+        obj = @(milliseconds);
+    }
+    else if([obj isKindOfClass:[WBTimeSpan class]])
+    {
+        obj = @([obj timeInterval]);
+    }
+    
+    
+	if ([obj isKindOfClass:[NSArray class]])
+    {
 		msgpack_pack_array(pk, (unsigned int)((NSArray*)obj).count);
-		for (id arrayElement in obj) {
+		for (id arrayElement in obj)
+        {
 			[self packObject:arrayElement into:pk];
 		}
-	} else if ([obj isKindOfClass:[NSDictionary class]]) {
+    }
+    else if ([obj isKindOfClass:[NSDictionary class]])
+    {
 		msgpack_pack_map(pk, (unsigned int)((NSDictionary*)obj).count);
-		for(id key in obj) {
+		for(id key in obj)
+        {
 			[self packObject:key into:pk];
 			[self packObject:[obj objectForKey:key] into:pk];
 		}
-	} else if ([obj isKindOfClass:[NSString class]]) {
+	}
+    else if ([obj isKindOfClass:[NSString class]])
+    {
 		const char *str = ((NSString*)obj).UTF8String;
 		size_t len = strlen(str);
 		msgpack_pack_raw(pk, len);
 		msgpack_pack_raw_body(pk, str, len);
-	} else if ([obj isKindOfClass:[NSNumber class]]) {
+	}
+    else if ([obj isKindOfClass:[NSNumber class]])
+    {
 		[self packNumber:obj into:pk];
-	} else if (obj==[NSNull null]) {
+	}
+    else if (obj==[NSNull null])
+    {
 		msgpack_pack_nil(pk);
-	} else {
-		CoreLog(WBLogLevelError, @"Could not messagepack object: %@", obj);
+	}
+    else
+    {
+        @throw [NSException exceptionWithName:NSInvalidArgumentException reason:[NSString stringWithFormat:@"Could not messagepack object: %@", obj] userInfo:nil];
 	}
 }
 
