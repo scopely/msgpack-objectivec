@@ -19,7 +19,9 @@ static const int kUnpackerBufferSize = 1024;
 @implementation MessagePackParser (Streaming)
 
 - (id)init {
-    return [self initWithBufferSize:kUnpackerBufferSize];
+    self = [super init];
+    msgpack_unpacker_init(&unpacker, kUnpackerBufferSize);
+    return self;
 }
 
 - (id)initWithBufferSize:(int)bufferSize {
